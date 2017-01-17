@@ -483,7 +483,7 @@ module.exports = function() {
         <h3 id="update-draft">Update draft record's metadata</h3>
         <p>This action updates the draft record with new information.</p>
         <ul>
-            <li><p>URL path: /api/records/RECORD_ID/</p></li>
+            <li><p>URL path: /api/records/RECORD_ID/draft</p></li>
             <li><p>HTTP Method: PATCH</p></li>
             <li><p>Required input data: the metadata for the record object to be created,
                 in the json patch format (see <a href="http://jsonpatch.com/">http://jsonpatch.com/</a>)
