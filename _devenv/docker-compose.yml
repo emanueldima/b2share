@@ -1,0 +1,46 @@
+version: '2'
+services:
+    postgres:
+        image: postgres:9.6.2
+        environment:
+            - "POSTGRES_PASSWORD=${B2SHARE_POSTGRESQL_PASSWORD}"
+            - "POSTGRES_USER=${B2SHARE_POSTGRESQL_USER}"
+            - "POSTGRES_DB=${B2SHARE_POSTGRESQL_DBNAME}"
+            - "PGDATA=/var/lib/postgresql/data"
+        volumes:
+            - "${B2SHARE_DATADIR}/postgres-data:/var/lib/postgresql/data"
+        ports:
+            - "5432:5432"
+
+    elasticsearch:
+        build: elasticsearch
+        volumes:
+            - "${B2SHARE_DATADIR}/elasticsearch-data:/usr/share/elasticsearch/data"
+        ports:
+            - "9200:9200"
+            - "9300:9300"
+
+    redis:
+        image: redis:3.2-alpine
+        volumes:
+            - "${B2SHARE_DATADIR}/redis-data:/data"
+        ports:
+            - "6379:6379"
+
+    mq:
+        hostname: b2share-redis
+        image: rabbitmq:3.6-management-alpine
+        environment:
+            - "RABBITMQ_DEFAULT_USER=${B2SHARE_RABBITMQ_USER}"
+            - "RABBITMQ_DEFAULT_PASS=${B2SHARE_RABBITMQ_PASS}"
+        ports:
+            - "15672:15672"
+            - "5672:5672"
+        volumes:
+            - "${B2SHARE_DATADIR}/rabbitmq-data:/var/lib/rabbitmq"
+
+    nginx:
+        build: nginx
+        ports:
+            - "80:80"
+            - "443:443"
