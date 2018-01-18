@@ -30,6 +30,7 @@ from sqlalchemy import and_
 from sqlalchemy.orm import aliased
 from flask import Blueprint, abort, request, url_for, make_response
 from flask import jsonify, Flask, current_app
+from copy import deepcopy
 from invenio_db import db
 from invenio_pidstore.resolver import Resolver
 from invenio_pidstore.errors import PIDDoesNotExistError, PIDRedirectedError
@@ -62,6 +63,7 @@ from b2share.modules.deposit.api import Deposit, copy_data_from_previous
 from b2share.modules.deposit.errors import RecordNotFoundVersioningError, \
     IncorrectRecordVersioningError
 from b2share.modules.records.permissions import DeleteRecordPermission
+from b2share.modules.directive.api import dex_dispatch
 
 
 # duplicated from invenio-records-rest because we need
@@ -303,6 +305,7 @@ class B2ShareRecordsListResource(RecordsListResource):
         if request.content_type not in self.loaders:
             abort(415)
         version_of = request.args.get('version_of')
+
         previous_record = None
         data = None
         if version_of:
@@ -335,8 +338,17 @@ class B2ShareRecordsListResource(RecordsListResource):
             verify_record_permission(permission_factory, data,
                                      previous_record=previous_record)
 
+        # Send pre-event to directive engine
+        if current_app.config.get('DIRECTIVE_ENGINE_URL'):
+            dexargs = deepcopy(kwargs)
+            dexargs['data'] = deepcopy(data)
+            if version_of:
+                dexargs['version_of'] = version_of
+            dex_dispatch('create-draft', request, dexargs, True)
+
         # Create uuid for record
         record_uuid = uuid.uuid4()
+
         # Create persistent identifier
         pid = self.minter(record_uuid, data=data)
 
@@ -344,6 +356,9 @@ class B2ShareRecordsListResource(RecordsListResource):
         record = self.record_class.create(data, id_=record_uuid,
                                           version_of=version_of)
         db.session.commit()
+
+        if current_app.config.get('DIRECTIVE_ENGINE_URL'):
+            dex_dispatch('create-draft', request, dexargs, False)
 
         response = self.make_response(
             pid, record, 201, links_factory=deposit_links_factory)

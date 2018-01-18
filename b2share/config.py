@@ -392,6 +392,9 @@ B2NOTE_URL = 'https://b2note.bsc.es/interface_main.html'
 # displayed in the UI
 TERMS_OF_USE_LINK = 'http://hdl.handle.net/11304/e43b2e3f-83c5-4e3f-b8b7-18d38d37a6cd'
 
+# directive engine, used for responding to events based on rules
+DIRECTIVE_ENGINE_URL = False
+
 # By default we suppose there is one proxy in front of B2Share
 WSGI_PROXIES = 1
 PREFERRED_URL_SCHEME = 'http'
